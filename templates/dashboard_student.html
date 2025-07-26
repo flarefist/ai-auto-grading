@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Student Dashboard</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(to right, #e3f2fd, #ffffff);
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+      }
+
+      header {
+        background-color: #1e3c72;
+        background-image: linear-gradient(147deg, #1e3c72 0%, #2a5298 74%);
+        color: white;
+        padding: 20px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+      }
+
+      header h1 {
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-image: url("https://cdn-icons-png.flaticon.com/512/3135/3135768.png");
+        background-size: cover;
+        background-position: center;
+      }
+
+      .logout-btn {
+        background: #ff6f61;
+        color: #fff;
+        padding: 6px 14px;
+        border: none;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease-in-out;
+      }
+
+      .logout-btn:hover {
+        background: #ff3d3d;
+        transform: scale(1.05);
+      }
+
+      main {
+        padding: 40px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .card {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        width: 90%;
+        max-width: 700px;
+        margin-bottom: 30px;
+        animation: fadeInUp 1s ease both;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(40px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        animation: fadeIn 2s ease-in-out;
+      }
+
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 14px;
+        text-align: center;
+      }
+
+      th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+      }
+
+      #noResults {
+        color: gray;
+        text-align: center;
+        padding-top: 10px;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 500px) {
+        header h1 {
+          font-size: 16px;
+        }
+
+        .logout-btn {
+          padding: 4px 10px;
+          font-size: 12px;
+        }
+
+        .card {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>
+        <div class="avatar"></div>
+        <span id="welcome-msg">Welcome</span>
+      </h1>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </header>
+
+    <main>
+      <div class="card">
+        <h2>Your Info</h2>
+        <p><strong>Email:</strong> <span id="email"></span></p>
+        <p><strong>Role:</strong> <span id="role"></span></p>
+      </div>
+
+      <div class="card">
+        <h2>Your Results</h2>
+        <table id="marksTable" style="display: none">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Total Marks</th>
+              <th>Percentage</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody id="marksBody"></tbody>
+        </table>
+        <p id="noResults">No marks uploaded yet.</p>
+      </div>
+    </main>
+
+    <script>
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You must log in first.");
+        window.location.href = "/";
+      }
+
+      async function fetchStudentData() {
+        const res = await fetch("/api/student-data", {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer " + token,
+          },
+        });
+
+        if (!res.ok) {
+          alert("Session expired or unauthorized.");
+          window.location.href = "/login";
+          return;
+        }
+
+        const data = await res.json();
+        document.getElementById("email").innerText = data.email;
+        document.getElementById("role").innerText = data.role;
+        document.getElementById("welcome-msg").innerText =
+          "Welcome, " + data.email;
+
+        const tbody = document.getElementById("marksBody");
+        let index = 1;
+
+        if (data.marks_history && data.marks_history.length > 0) {
+          document.getElementById("noResults").style.display = "none";
+          document.getElementById("marksTable").style.display = "table";
+          data.marks_history.forEach((item) => {
+            const row = `<tr>
+              <td>${index++}</td>
+              <td>${item.student_marks}</td>
+              <td>${item.student_percentage}%</td>
+              <td>Descriptive</td>
+            </tr>`;
+            tbody.innerHTML += row;
+          });
+        }
+
+        if (data.mcq_marks_history && data.mcq_marks_history.length > 0) {
+          document.getElementById("noResults").style.display = "none";
+          document.getElementById("marksTable").style.display = "table";
+          data.mcq_marks_history.forEach((item) => {
+            const row = `<tr>
+              <td>${index++}</td>
+              <td>${item.total_score}</td>
+              <td>${item.percentage}%</td>
+              <td>MCQ</td>
+            </tr>`;
+            tbody.innerHTML += row;
+          });
+        }
+      }
+
+      fetchStudentData();
+
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+      }
+    </script>
+  </body>
+</html>

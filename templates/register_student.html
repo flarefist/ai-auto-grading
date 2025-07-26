@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Student Registration</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Helvetica Neue", sans-serif;
+        background: linear-gradient(to right, #ece9e6, #ffffff);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .container {
+        display: flex;
+        width: 90%;
+        max-width: 900px;
+        height: 500px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        animation: fadeIn 1s ease-in-out;
+      }
+
+      .left {
+        flex: 1;
+        background: url("https://i.ibb.co/zhRvS19p/registration-form-template-with-flat-design-23-2147971971.jpg")
+          center/cover no-repeat;
+        position: relative;
+      }
+
+      .left::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: rgba(0, 0, 0, 0.3);
+      }
+
+      .right {
+        flex: 1;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        animation: slideIn 1s ease-out;
+        background: #ffffff;
+      }
+
+      h2 {
+        margin-bottom: 20px;
+        color: #283e4a;
+        font-size: 28px;
+        text-align: center;
+      }
+
+      input {
+        width: 100%;
+        padding: 14px;
+        margin: 12px 0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+      }
+
+      button {
+        padding: 14px;
+        background: #283e4a;
+        color: white;
+        border: none;
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        background: #1d2d36;
+        transform: translateY(-2px);
+        box-shadow: 0 0 10px rgba(40, 62, 74, 0.4);
+      }
+
+      p {
+        text-align: center;
+        margin-top: 15px;
+      }
+
+      a {
+        color: #283e4a;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          flex-direction: column;
+          height: auto;
+        }
+
+        .left {
+          height: 200px;
+        }
+
+        .right {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="left"></div>
+
+      <div class="right">
+        <form id="registerForm">
+          <h2>Student Registration</h2>
+          <input type="email" id="email" placeholder="Email" required />
+          <input
+            type="password"
+            id="password"
+            placeholder="Password"
+            required
+          />
+          <button type="submit">Register</button>
+          <p>Already registered? <a href="/login">Login here</a></p>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("registerForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          const res = await fetch("/register-student", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            alert(
+              "Registered! A verification token has been sent to your email."
+            );
+            window.location.href = "/verify-manual";
+          } else {
+            alert(data.message || "Registration failed");
+          }
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['Student_Ticked']
+
+roboflow:
+  workspace: rajin-khan-vv1lm
+  project: juthi_ocr
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/rajin-khan-vv1lm/juthi_ocr/dataset/1

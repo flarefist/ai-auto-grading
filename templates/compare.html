@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Handwritten Answer Grading System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .upload-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .preview-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .preview-box {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .process-btn {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            display: block;
+            margin: 30px auto;
+            transition: all 0.3s ease;
+        }
+
+        .process-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.4);
+        }
+
+        .process-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .answer-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .answer-item {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .answer-item.correct {
+            background: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid #28a745;
+        }
+
+        .answer-item.incorrect {
+            background: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+        }
+
+        .score-display {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .score-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .chart-container {
+            max-width: 400px;
+            margin: 30px auto;
+        }
+
+        .error-message {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .preview-container,
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Handwritten Answer Grading System</h1>
+            <p>Upload handwritten answer sheets and answer keys for automated evaluation</p>
+        </div>
+
+        <div class="upload-section">
+            <h2>📝 Upload Handwritten Answer Sheet</h2>
+            <div class="upload-area" id="studentUpload">
+                <p>Drag and drop the student's handwritten answer sheet here</p>
+                <p><strong>Supported formats:</strong> JPG, PNG, PDF</p>
+                <p>or</p>
+                <button class="upload-btn" onclick="document.getElementById('studentFile').click()">
+                    Choose File
+                </button>
+                <input type="file" id="studentFile" class="file-input" accept="image/*,application/pdf">
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <h2>📋 Upload Answer Key</h2>
+            <div class="upload-area" id="answerUpload">
+                <p>Drag and drop the answer key/solution sheet here</p>
+                <p><strong>Supported formats:</strong> JPG, PNG, PDF</p>
+                <p>or</p>
+                <button class="upload-btn" onclick="document.getElementById('answerFile').click()">
+                    Choose File
+                </button>
+                <input type="file" id="answerFile" class="file-input" accept="image/*,application/pdf">
+            </div>
+        </div>
+
+        <div class="preview-container" id="previewContainer" style="display: none;">
+            <div class="preview-box">
+                <h3>Student Answer Sheet</h3>
+                <img id="studentPreview" class="preview-image" alt="Student answers">
+            </div>
+            <div class="preview-box">
+                <h3>Answer Key</h3>
+                <img id="answerPreview" class="preview-image" alt="Answer key">
+            </div>
+        </div>
+
+        <button class="process-btn" id="processBtn" disabled onclick="processAnswers()">
+            🔍 Analyze and Grade Answers
+        </button>
+
+        <div class="loading" id="loadingSection" style="display: none;">
+            <div class="spinner"></div>
+            <p>Processing document using AI OCR...</p>
+            <p id="loadingStatus">Initializing...</p>
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h2>📊 Grading Results</h2>
+            
+            <div class="score-display">
+                <h3>Overall Score</h3>
+                <div class="score-number" id="overallScore">0%</div>
+                <p id="scoreText">Calculating...</p>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="scoreChart"></canvas>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="answer-box">
+                    <h3>🎯 Student Answers (Detected)</h3>
+                    <div id="studentAnswers"></div>
+                </div>
+                <div class="answer-box">
+                    <h3>✅ Correct Answers</h3>
+                    <div id="correctAnswers"></div>
+                </div>
+            </div>
+
+            <div id="detailedComparison"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let studentImage = null;
+        let answerImage = null;
+        let studentText = '';
+        let answerText = '';
+
+        // PDF to Image conversion
+        async function convertPdfToImages(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                const images = [];
+                
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const scale = 2.0; // Higher scale for better OCR accuracy
+                    const viewport = page.getViewport({ scale });
+                    
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                    
+                    images.push(canvas.toDataURL('image/png'));
+                }
+                
+                return images;
+            } catch (error) {
+                console.error('PDF conversion error:', error);
+                throw new Error('Failed to convert PDF to images');
+            }
+        }
+
+        // File upload handling
+        function setupFileUpload(uploadArea, fileInput, previewId, imageVar) {
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileSelect(files[0], previewId, imageVar);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0], previewId, imageVar);
+                }
+            });
+        }
+
+        async function handleFileSelect(file, previewId, imageVar) {
+            const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+            const isPdf = file.type === 'application/pdf';
+            const isImage = validImageTypes.includes(file.type);
+            
+            if (!isPdf && !isImage) {
+                alert('Please select an image file (JPG, PNG, GIF) or PDF file');
+                return;
+            }
+
+            try {
+                document.getElementById('loadingStatus').textContent = 'Processing file...';
+                document.getElementById('loadingSection').style.display = 'block';
+
+                let imageData;
+                
+                if (isPdf) {
+                    document.getElementById('loadingStatus').textContent = 'Converting PDF to images...';
+                    const images = await convertPdfToImages(file);
+                    imageData = images[0]; // Use first page for preview
+                    
+                    // Store all pages for OCR processing
+                    if (imageVar === 'student') {
+                        studentImage = images;
+                    } else {
+                        answerImage = images;
+                    }
+                } else {
+                    // Handle regular image files
+                    const reader = new FileReader();
+                    imageData = await new Promise((resolve) => {
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
+                    
+                    if (imageVar === 'student') {
+                        studentImage = [imageData]; // Wrap in array for consistency
+                    } else {
+                        answerImage = [imageData];
+                    }
+                }
+                
+                // Show preview
+                document.getElementById(previewId).src = imageData;
+                document.getElementById('previewContainer').style.display = 'grid';
+                
+                checkBothFilesLoaded();
+                
+            } catch (error) {
+                console.error('File processing error:', error);
+                alert('Error processing file: ' + error.message);
+            } finally {
+                document.getElementById('loadingSection').style.display = 'none';
+            }
+        }
+
+        function checkBothFilesLoaded() {
+            if (studentImage && answerImage) {
+                document.getElementById('processBtn').disabled = false;
+            }
+        }
+
+        // Setup file uploads
+        setupFileUpload(
+            document.getElementById('studentUpload'),
+            document.getElementById('studentFile'),
+            'studentPreview',
+            'student'
+        );
+
+        setupFileUpload(
+            document.getElementById('answerUpload'),
+            document.getElementById('answerFile'),
+            'answerPreview',
+            'answer'
+        );
+
+        // OCR Processing with progress tracking
+        async function performOCR(imageArray, label) {
+            try {
+                let combinedText = '';
+                
+                for (let i = 0; i < imageArray.length; i++) {
+                    document.getElementById('loadingStatus').textContent = 
+                        `Processing ${label} - Page ${i + 1} of ${imageArray.length}...`;
+                    
+                    const { data: { text } } = await Tesseract.recognize(
+                        imageArray[i],
+                        'eng',
+                        {
+                            logger: m => {
+                                if (m.status === 'recognizing text') {
+                                    const progress = Math.round(m.progress * 100);
+                                    document.getElementById('loadingStatus').textContent = 
+                                        `Processing ${label} - Page ${i + 1}: ${progress}% complete`;
+                                }
+                            }
+                        }
+                    );
+                    
+                    combinedText += text + '\n';
+                }
+                
+                return combinedText;
+            } catch (error) {
+                console.error('OCR Error:', error);
+                throw new Error(`Failed to process ${label} with OCR`);
+            }
+        }
+
+        // Answer extraction and parsing
+        function extractAnswers(text) {
+            const answers = {};
+            const lines = text.split('\n');
+            
+            for (let line of lines) {
+                line = line.trim();
+                if (line.length === 0) continue;
+                
+                // Match patterns like "1.a) Rome", "2b) Paris", "3. New York", etc.
+                const patterns = [
+                    /(\d+)\.?\s*([a-z])\)\s*(.+)/i,  // 1.a) answer
+                    /(\d+)\s*([a-z])\)\s*(.+)/i,     // 1a) answer
+                    /(\d+)\.\s*(.+)/i,               // 1. answer
+                    /(\d+)\)\s*(.+)/i,               // 1) answer
+                    /(\d+)\s+(.+)/i                  // 1 answer
+                ];
+                
+                for (let pattern of patterns) {
+                    const match = line.match(pattern);
+                    if (match) {
+                        let questionNum, subPart, answer;
+                        
+                        if (match.length === 4) {
+                            questionNum = match[1];
+                            subPart = match[2];
+                            answer = match[3].trim();
+                            answers[`${questionNum}${subPart}`] = answer;
+                        } else if (match.length === 3) {
+                            questionNum = match[1];
+                            answer = match[2].trim();
+                            answers[questionNum] = answer;
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            return answers;
+        }
+
+        // Answer comparison
+        function compareAnswers(studentAnswers, correctAnswers) {
+            const results = {};
+            let correctCount = 0;
+            let totalQuestions = 0;
+            
+            // Get all unique question numbers
+            const allQuestions = new Set([
+                ...Object.keys(studentAnswers),
+                ...Object.keys(correctAnswers)
+            ]);
+            
+            for (let question of allQuestions) {
+                totalQuestions++;
+                const studentAnswer = studentAnswers[question] || 'No answer provided';
+                const correctAnswer = correctAnswers[question] || 'Answer key missing';
+                
+                // Normalize answers for comparison
+                const normalizedStudent = studentAnswer.toLowerCase().trim().replace(/[^\w\s]/g, '');
+                const normalizedCorrect = correctAnswer.toLowerCase().trim().replace(/[^\w\s]/g, '');
+                
+                // Check if answers match (with some tolerance)
+                const isCorrect = normalizedStudent === normalizedCorrect || 
+                                 normalizedStudent.includes(normalizedCorrect) ||
+                                 normalizedCorrect.includes(normalizedStudent);
+                
+                if (isCorrect) correctCount++;
+                
+                results[question] = {
+                    student: studentAnswer,
+                    correct: correctAnswer,
+                    isCorrect: isCorrect
+                };
+            }
+            
+            return {
+                results: results,
+                score: totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0,
+                correctCount: correctCount,
+                totalQuestions: totalQuestions
+            };
+        }
+
+        // Process answers
+        async function processAnswers() {
+            try {
+                document.getElementById('loadingSection').style.display = 'block';
+                document.getElementById('processBtn').disabled = true;
+                document.getElementById('loadingStatus').textContent = 'Starting OCR processing...';
+                
+                // Perform OCR on both image arrays
+                console.log('Processing student answer sheet...');
+                studentText = await performOCR(studentImage, 'student answers');
+                
+                console.log('Processing answer key...');
+                answerText = await performOCR(answerImage, 'answer key');
+                
+                document.getElementById('loadingStatus').textContent = 'Analyzing answers...';
+                
+                // Extract answers
+                const studentAnswers = extractAnswers(studentText);
+                const correctAnswers = extractAnswers(answerText);
+                
+                console.log('Student answers:', studentAnswers);
+                console.log('Correct answers:', correctAnswers);
+                
+                // Compare answers
+                const comparison = compareAnswers(studentAnswers, correctAnswers);
+                
+                // Display results
+                displayResults(comparison, studentAnswers, correctAnswers);
+                
+            } catch (error) {
+                console.error('Processing error:', error);
+                document.getElementById('resultsSection').innerHTML = `
+                    <div class="error-message">
+                        <strong>Error:</strong> ${error.message || 'Failed to process documents. Please try again with clearer images or PDFs.'}
+                    </div>
+                `;
+                document.getElementById('resultsSection').style.display = 'block';
+            } finally {
+                document.getElementById('loadingSection').style.display = 'none';
+                document.getElementById('processBtn').disabled = false;
+            }
+        }
+
+        // Display results
+        function displayResults(comparison, studentAnswers, correctAnswers) {
+            const { results, score, correctCount, totalQuestions } = comparison;
+            
+            // Update score display
+            document.getElementById('overallScore').textContent = `${score}%`;
+            document.getElementById('scoreText').textContent = 
+                `${correctCount} out of ${totalQuestions} answers correct`;
+            
+            // Create chart
+            createScoreChart(score);
+            
+            // Display student answers
+            const studentContainer = document.getElementById('studentAnswers');
+            studentContainer.innerHTML = '';
+            Object.keys(studentAnswers).forEach(question => {
+                const div = document.createElement('div');
+                div.className = 'answer-item';
+                div.innerHTML = `<strong>Q${question}:</strong> ${studentAnswers[question]}`;
+                studentContainer.appendChild(div);
+            });
+            
+            // Display correct answers
+            const correctContainer = document.getElementById('correctAnswers');
+            correctContainer.innerHTML = '';
+            Object.keys(correctAnswers).forEach(question => {
+                const div = document.createElement('div');
+                div.className = 'answer-item';
+                div.innerHTML = `<strong>Q${question}:</strong> ${correctAnswers[question]}`;
+                correctContainer.appendChild(div);
+            });
+            
+            // Display detailed comparison
+            const comparisonContainer = document.getElementById('detailedComparison');
+            comparisonContainer.innerHTML = '<h3>📋 Detailed Comparison</h3>';
+            
+            Object.keys(results).forEach(question => {
+                const result = results[question];
+                const div = document.createElement('div');
+                div.className = `answer-item ${result.isCorrect ? 'correct' : 'incorrect'}`;
+                div.innerHTML = `
+                    <strong>Question ${question}:</strong><br>
+                    <strong>Student:</strong> ${result.student}<br>
+                    <strong>Correct:</strong> ${result.correct}<br>
+                    <strong>Status:</strong> ${result.isCorrect ? '✅ Correct' : '❌ Incorrect'}
+                `;
+                comparisonContainer.appendChild(div);
+            });
+            
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        // Create score chart
+        function createScoreChart(score) {
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Correct', 'Incorrect'],
+                    datasets: [{
+                        data: [score, 100 - score],
+                        backgroundColor: [
+                            'rgba(40, 167, 69, 0.8)',
+                            'rgba(220, 53, 69, 0.8)'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

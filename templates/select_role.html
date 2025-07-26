@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Select Role</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Helvetica Neue", sans-serif;
+        background-image: url("https://images.unsplash.com/photo-1524995997946-a1c2e315a42f");
+        background-size: cover;
+        background-position: center;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: fadeInBody 1.5s ease-in-out;
+        overflow: hidden;
+      }
+
+      @keyframes fadeInBody {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .container {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        animation: slideUp 1s ease;
+        width: 90%;
+        max-width: 340px;
+        position: relative;
+        z-index: 2;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(30px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .logo-circle {
+        background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+        border-radius: 50%;
+        padding: 18px;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        animation: pop 0.5s ease;
+      }
+
+      .logo {
+        width: 40px;
+        height: 40px;
+      }
+
+      @keyframes pop {
+        0% {
+          transform: scale(0.6);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      h2 {
+        color: #2c3e50;
+        font-size: 22px;
+        margin-bottom: 6px;
+        animation: fadeInDown 0.6s ease-in-out;
+      }
+
+      .subtitle {
+        color: #555;
+        font-size: 14px;
+        margin-bottom: 20px;
+        font-weight: 500;
+        animation: fadeInDown 0.8s ease-in-out;
+      }
+
+      @keyframes fadeInDown {
+        from {
+          transform: translateY(-10px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      a.button {
+        display: block;
+        margin: 12px 0;
+        padding: 14px;
+        background-color: #283e4a;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+        transition: transform 0.3s, box-shadow 0.3s;
+      }
+
+      a.button:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 0 15px rgba(40, 62, 74, 0.6);
+      }
+
+      .ball {
+        width: 20px;
+        height: 20px;
+        background-color: #ff6f61;
+        border-radius: 50%;
+        position: absolute;
+        bottom: 0;
+        left: 10%;
+        animation: bounce 2s infinite ease-in-out;
+        z-index: 1;
+      }
+
+      @keyframes bounce {
+        0% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-200px);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 480px) {
+        h2 {
+          font-size: 18px;
+        }
+        .subtitle {
+          font-size: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ball"></div>
+
+    <div class="container">
+      <div class="logo-circle">
+        <img
+          class="logo"
+          src="https://cdn-icons-png.flaticon.com/512/3135/3135673.png"
+          alt="logo"
+        />
+      </div>
+
+      <h2>Welcome to EduGrader</h2>
+      <p class="subtitle">Select your role to get started</p>
+
+      <a class="button" href="/register-student">Register as Student</a>
+      <a class="button" href="/register-teacher">Register as Teacher</a>
+    </div>
+  </body>
+</html>

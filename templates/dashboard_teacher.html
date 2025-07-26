@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Teacher Dashboard</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #1a2a3a, #0d1117);
+        color: #fff;
+        overflow-x: hidden;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 40px;
+        background: rgba(20, 30, 40, 0.8);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(6px);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      #teacherEmail {
+        font-size: 1.3rem;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 12px;
+        border: 2px solid #66a6ff;
+      }
+
+      .logout-btn {
+        background: linear-gradient(135deg, #ff6f61, #ff9478);
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+        transition: all 0.25s ease-in-out;
+      }
+
+      .logout-btn:hover {
+        background: linear-gradient(135deg, #ff574d, #ff8367);
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(255, 111, 97, 0.4);
+      }
+
+      main {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 40px 20px;
+        min-height: 90vh;
+        gap: 30px;
+        flex-wrap: wrap;
+      }
+
+      .dashboard-box {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(12px);
+        width: 100%;
+        max-width: 600px;
+        animation: fadeInUp 1s ease forwards;
+        color: #fff;
+      }
+
+      .update-marks-box {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(12px);
+        width: 100%;
+        max-width: 600px;
+        animation: fadeInUp 1s ease forwards;
+        color: #fff;
+        border: 2px solid rgba(102, 166, 255, 0.3);
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(40px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      h2,
+      h3 {
+        margin-bottom: 20px;
+      }
+
+      label {
+        margin-top: 15px;
+        display: block;
+        font-weight: 500;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 12px;
+        margin-top: 8px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        border: none;
+        background: #f0f4ff;
+        color: #000;
+        font-size: 15px;
+      }
+
+      button {
+        padding: 14px;
+        width: 100%;
+        background: #66a6ff;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        color: white;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: #3c8dd6;
+        box-shadow: 0 0 15px rgba(102, 166, 255, 0.5);
+      }
+
+      .update-btn {
+        background: linear-gradient(135deg, #28a745, #20c997);
+      }
+
+      .update-btn:hover {
+        background: linear-gradient(135deg, #218838, #1eb880);
+        box-shadow: 0 0 15px rgba(40, 167, 69, 0.5);
+      }
+
+      .disabled-btn {
+        background: #ff6f61;
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .section-footer {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      .current-marks-display {
+        background: rgba(102, 166, 255, 0.1);
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        border-left: 4px solid #66a6ff;
+      }
+
+      .marks-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 8px 0;
+        padding: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 5px;
+      }
+
+      .question-label {
+        font-weight: 500;
+        color: #66a6ff;
+      }
+
+      .current-mark {
+        color: #28a745;
+        font-weight: bold;
+      }
+
+      .mark-input {
+        width: 80px !important;
+        margin: 0 !important;
+        padding: 5px !important;
+        text-align: center;
+      }
+
+      .student-card {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(102, 166, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .student-card:hover {
+        border-color: rgba(102, 166, 255, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .student-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(102, 166, 255, 0.2);
+      }
+
+      .student-email {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #66a6ff;
+      }
+
+      .total-score {
+        font-size: 1rem;
+        color: #28a745;
+        font-weight: bold;
+      }
+
+      .marks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .mark-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        border-left: 3px solid transparent;
+      }
+
+      .mark-item.descriptive {
+        border-left-color: #ff6b6b;
+      }
+
+      .mark-item.mcq {
+        border-left-color: #4ecdc4;
+      }
+
+      .question-info {
+        flex: 1;
+      }
+
+      .question-title {
+        font-weight: 500;
+        color: #fff;
+        margin-bottom: 4px;
+      }
+
+      .question-type {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .type-descriptive {
+        background: rgba(255, 107, 107, 0.2);
+        color: #ff6b6b;
+      }
+
+      .type-mcq {
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ecdc4;
+      }
+
+      .mark-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .current-score {
+        color: #28a745;
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      .update-input {
+        width: 60px !important;
+        margin: 0 !important;
+        padding: 6px !important;
+        text-align: center;
+        font-size: 12px;
+        border-radius: 4px;
+      }
+
+      .update-student-btn {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        padding: 10px 20px;
+        font-size: 14px;
+        margin-top: 15px;
+      }
+
+      .update-student-btn:hover {
+        background: linear-gradient(135deg, #218838, #1eb880);
+        box-shadow: 0 0 15px rgba(40, 167, 69, 0.5);
+      }
+
+      .no-marks-message {
+        text-align: center;
+        padding: 40px;
+        color: #ccc;
+        font-style: italic;
+      }
+
+      /* Background Particle Effect */
+      .particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background-image: radial-gradient(#66a6ff 1px, transparent 1px);
+        background-size: 40px 40px;
+        opacity: 0.06;
+        animation: moveBg 60s linear infinite;
+      }
+
+      @keyframes moveBg {
+        0% {
+          background-position: 0 0;
+        }
+        100% {
+          background-position: 1000px 1000px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        main {
+          flex-direction: column;
+          align-items: center;
+        }
+        
+        .dashboard-box,
+        .update-marks-box {
+          max-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="particles"></div>
+
+    <header>
+      <div style="display: flex; align-items: center">
+        <img
+          src="https://cdn-icons-png.flaticon.com/512/3135/3135768.png"
+          alt="avatar"
+          class="avatar"
+        />
+        <h1 id="teacherEmail">Welcome, Teacher</h1>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </header>
+
+    <main>
+      <!-- Original Compare Scripts Section -->
+      <div class="dashboard-box">
+        <h2>Compare Descriptive Scripts</h2>
+        <form
+          id="uploadForm"
+          action="/compare"
+          method="POST"
+          enctype="multipart/form-data"
+        >
+          <label for="studentEmail">Select Student:</label>
+          <select id="studentEmail" name="studentEmail" required>
+            <option disabled selected>Loading students...</option>
+          </select>
+
+          <label for="teachersMarksheet">Teacher's Marksheet (PDF):</label>
+          <input
+            type="file"
+            id="teachersMarksheet"
+            name="teachersMarksheet"
+            accept=".pdf"
+            required
+          />
+
+          <label for="studentMarksheet">Student Marksheet (PDF):</label>
+          <input
+            type="file"
+            id="studentMarksheet"
+            name="studentMarksheet"
+            accept=".pdf"
+            required
+          />
+
+          <button type="submit">Submit</button>
+        </form>
+
+        <div class="section-footer">
+          <h3>MCQ Auto Grading</h3>
+          <form
+            action="/mcq-checker"
+            method="POST"
+            enctype="multipart/form-data"
+          >
+            <button type="submit">Check MCQ</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- New Update Marks Section -->
+      <div class="update-marks-box">
+        <h2>Update Marks</h2>
+        <p style="margin-bottom: 25px; color: #ccc; font-size: 14px;">
+          Review and update all students' marks with descriptive/MCQ indicators
+        </p>
+
+        <div id="allStudentsMarks">
+          <div id="loadingMarks" style="text-align: center; padding: 20px;">
+            <p>Loading all students' marks...</p>
+          </div>
+          
+          <div id="studentsMarksContainer">
+            <!-- All students' marks will be populated here -->
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You must log in first.");
+        window.location.href = "/";
+      }
+
+      // Enhanced sample data with descriptive and MCQ marks
+      const allStudentsMarksData = {
+        "student1@example.com": {
+          descriptive: {
+            "Question 1": { current: 8, max: 10 },
+            "Question 2": { current: 6, max: 10 },
+            "Question 3": { current: 9, max: 10 }
+          },
+          mcq: {
+            "MCQ Set A": { current: 15, max: 20 },
+            "MCQ Set B": { current: 18, max: 20 },
+            "MCQ Set C": { current: 16, max: 20 }
+          }
+        },
+        "student2@example.com": {
+          descriptive: {
+            "Question 1": { current: 7, max: 10 },
+            "Question 2": { current: 8, max: 10 },
+            "Question 3": { current: 6, max: 10 }
+          },
+          mcq: {
+            "MCQ Set A": { current: 17, max: 20 },
+            "MCQ Set B": { current: 14, max: 20 },
+            "MCQ Set C": { current: 19, max: 20 }
+          }
+        },
+        "student3@example.com": {
+          descriptive: {
+            "Question 1": { current: 9, max: 10 },
+            "Question 2": { current: 7, max: 10 },
+            "Question 3": { current: 8, max: 10 }
+          },
+          mcq: {
+            "MCQ Set A": { current: 16, max: 20 },
+            "MCQ Set B": { current: 19, max: 20 },
+            "MCQ Set C": { current: 17, max: 20 }
+          }
+        }
+      };
+
+      async function loadStudents() {
+        try {
+          const response = await fetch("/api/student-list", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (!response.ok) throw new Error("Failed to load students");
+          const data = await response.json();
+          
+          // Populate original dropdown only
+          const studentSelect = document.getElementById("studentEmail");
+          studentSelect.innerHTML = "";
+          
+          data.students.forEach((student) => {
+            const option = document.createElement("option");
+            option.value = student;
+            option.textContent = student;
+            studentSelect.appendChild(option);
+          });
+
+          // Load all students' marks for the update section
+          loadAllStudentsMarks();
+          
+        } catch (err) {
+          document.getElementById("studentEmail").innerHTML = `<option disabled>Error loading student list</option>`;
+          alert("Error: " + err.message);
+        }
+      }
+
+      async function loadAllStudentsMarks() {
+        const loadingDiv = document.getElementById("loadingMarks");
+        const container = document.getElementById("studentsMarksContainer");
+        
+        try {
+          loadingDiv.style.display = "block";
+          container.innerHTML = "";
+
+          // In real implementation, fetch from your backend API
+          // const response = await fetch("/api/all-students-marks", {
+          //   headers: { Authorization: "Bearer " + token },
+          // });
+          // const allMarksData = await response.json();
+
+          // For demonstration, using sample data
+          const allMarksData = allStudentsMarksData;
+
+          loadingDiv.style.display = "none";
+
+          if (Object.keys(allMarksData).length === 0) {
+            container.innerHTML = '<div class="no-marks-message">No student marks found. Please check MCQ and upload marksheets first.</div>';
+            return;
+          }
+
+          // Generate student cards
+          Object.entries(allMarksData).forEach(([studentEmail, marksData]) => {
+            const studentCard = createStudentCard(studentEmail, marksData);
+            container.appendChild(studentCard);
+          });
+
+        } catch (error) {
+          loadingDiv.style.display = "none";
+          container.innerHTML = '<div class="no-marks-message">Error loading marks: ' + error.message + '</div>';
+        }
+      }
+
+      function createStudentCard(studentEmail, marksData) {
+        const card = document.createElement('div');
+        card.className = 'student-card';
+        
+        // Calculate total scores
+        let totalCurrent = 0;
+        let totalMax = 0;
+        
+        Object.values(marksData.descriptive || {}).forEach(mark => {
+          totalCurrent += mark.current;
+          totalMax += mark.max;
+        });
+        
+        Object.values(marksData.mcq || {}).forEach(mark => {
+          totalCurrent += mark.current;
+          totalMax += mark.max;
+        });
+
+        let marksHTML = '';
+        
+        // Add descriptive marks
+        if (marksData.descriptive) {
+          Object.entries(marksData.descriptive).forEach(([question, markInfo]) => {
+            marksHTML += `
+              <div class="mark-item descriptive">
+                <div class="question-info">
+                  <div class="question-title">${question}</div>
+                  <span class="question-type type-descriptive">Descriptive</span>
+                </div>
+                <div class="mark-controls">
+                  <span class="current-score">${markInfo.current}/${markInfo.max}</span>
+                  <input 
+                    type="number" 
+                    class="update-input" 
+                    min="0" 
+                    max="${markInfo.max}" 
+                    value="${markInfo.current}"
+                    step="0.5"
+                    data-student="${studentEmail}"
+                    data-question="${question}"
+                    data-type="descriptive"
+                  />
+                </div>
+              </div>
+            `;
+          });
+        }
+        
+        // Add MCQ marks
+        if (marksData.mcq) {
+          Object.entries(marksData.mcq).forEach(([question, markInfo]) => {
+            marksHTML += `
+              <div class="mark-item mcq">
+                <div class="question-info">
+                  <div class="question-title">${question}</div>
+                  <span class="question-type type-mcq">MCQ</span>
+                </div>
+                <div class="mark-controls">
+                  <span class="current-score">${markInfo.current}/${markInfo.max}</span>
+                  <input 
+                    type="number" 
+                    class="update-input" 
+                    min="0" 
+                    max="${markInfo.max}" 
+                    value="${markInfo.current}"
+                    step="0.5"
+                    data-student="${studentEmail}"
+                    data-question="${question}"
+                    data-type="mcq"
+                  />
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        card.innerHTML = `
+          <div class="student-header">
+            <div class="student-email">${studentEmail}</div>
+            <div class="total-score">Total: ${totalCurrent}/${totalMax}</div>
+          </div>
+          <div class="marks-grid">
+            ${marksHTML}
+          </div>
+          <button class="update-student-btn" onclick="updateStudentMarks('${studentEmail}')">
+            Update ${studentEmail.split('@')[0]}'s Marks
+          </button>
+        `;
+
+        return card;
+      }
+
+      async function updateStudentMarks(studentEmail) {
+        const inputs = document.querySelectorAll(`input[data-student="${studentEmail}"]`);
+        const updatedMarks = {
+          descriptive: {},
+          mcq: {}
+        };
+
+        inputs.forEach(input => {
+          const question = input.dataset.question;
+          const type = input.dataset.type;
+          const value = parseFloat(input.value);
+          
+          updatedMarks[type][question] = value;
+        });
+
+        try {
+          // In real implementation, send to your backend
+          // const response = await fetch("/api/update-student-marks", {
+          //   method: "POST",
+          //   headers: { 
+          //     "Authorization": "Bearer " + token,
+          //     "Content-Type": "application/json"
+          //   },
+          //   body: JSON.stringify({
+          //     studentEmail: studentEmail,
+          //     marks: updatedMarks
+          //   })
+          // });
+
+          // For demonstration
+          console.log("Updating marks for:", studentEmail, updatedMarks);
+          alert(`Marks updated successfully for ${studentEmail}!`);
+          
+          // Optionally reload the marks to show updated values
+          // loadAllStudentsMarks();
+          
+        } catch (error) {
+          alert("Error updating marks: " + error.message);
+        }
+      }
+
+      async function loadTeacherInfo() {
+        try {
+          const res = await fetch("/api/teacher-info", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          if (!res.ok) throw new Error("Unauthorized");
+          const data = await res.json();
+          document.getElementById("teacherEmail").textContent =
+            "Welcome, " + data.email;
+        } catch (err) {
+          alert("Session expired or invalid. Please login again.");
+          window.location.href = "/login";
+        }
+      }
+
+      // Original form submission
+      document.getElementById("uploadForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        try {
+          const response = await fetch(form.action, {
+            method: form.method,
+            headers: { Authorization: "Bearer " + token },
+            body: formData,
+          });
+          const result = await response.json();
+          if (!response.ok)
+            throw new Error(result.message || "Something went wrong");
+          alert("Marks uploaded successfully.");
+          
+          // Reload all students' marks after successful upload
+          loadAllStudentsMarks();
+        } catch (error) {
+          alert("Error: " + error.message);
+        }
+      });
+
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+      }
+
+      // Initialize
+      loadStudents();
+      loadTeacherInfo();
+    </script>
+  </body>
+</html>
